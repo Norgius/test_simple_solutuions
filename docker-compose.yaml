@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+
+  db:
+    container_name: db
+    image: postgres:14.8
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - 54321:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  django:
+    container_name: django
+    restart: always
+    build: ./
+    volumes:
+      - ./src/:/src
+    env_file:
+      - ./.env
+    ports:
+      - 8000:8000
+    command: python /src/manage.py runserver 0.0.0.0:8000
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
