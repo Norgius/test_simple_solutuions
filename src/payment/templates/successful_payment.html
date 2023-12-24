@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div>
+  <h1>Благодарим вас за покупку</h1>
+  <p>Вы можете вернуться <a class="btn" href="{% url 'payment:items' %}">к списку товаров</a></p>
+</div>
+{% endblock %}

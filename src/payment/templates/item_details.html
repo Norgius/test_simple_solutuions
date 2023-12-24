@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="card">
+
+  <h3>{{ item.name }}</h3>
+  <p>{{ item.description }}</p>
+  <p>Цена: {{ item.get_displayed_price }} $</p>
+  <form action="{% url 'payment:create_stripe_session' pk=item.id %}" method="POST">
+    {% csrf_token %}
+    <button class="btn" type="submit">Купить</button>
+  </form>
+</div>
+
+{% endblock %}
