@@ -10,13 +10,12 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
     ports:
-      - 54321:5432
+      - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
   
   django:
     container_name: django
-    restart: always
     build: ./
     volumes:
       - ./src/:/src
