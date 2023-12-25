@@ -7,10 +7,19 @@
   <h3>{{ item.name }}</h3>
   <p>{{ item.description }}</p>
   <p>Цена: {{ item.get_displayed_price }} $</p>
-  <form action="{% url 'payment:create_stripe_session' pk=item.id %}" method="POST">
+  <form action="{% url 'payment:add_item_to_order' item_id=item.id %}" method="POST">
     {% csrf_token %}
-    <button class="btn" type="submit">Купить</button>
+    <button class="btn" type="submit">Добавить</button>
   </form>
 </div>
+
+{% if order_id %}
+<div class="card">
+  <h2>Данный товар уже есть в заказе, добавьте другой товар</h2>
+  <p>Вы можете вернуться <a class="btn" href="{% url 'payment:items' %}">к списку товаров</a>
+    или посмотреть <a class="btn" href="{% url 'payment:order' order_id %}">заказ</a>
+  </p>
+</div>
+{% endif %}
 
 {% endblock %}

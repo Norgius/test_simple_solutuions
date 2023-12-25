@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+
+  {% if order.items.all %}
+  <h2>Ваш заказ</h2>
+  {% for item in order.items.all %}
+  <p>{{ item.name }} - {{ item.get_displayed_price }} $</p>
+
+  <form action="{% url 'payment:delete_item_from_order' item_id=item.id %}" method="post">
+    {% csrf_token %}
+    <button class="btn" type="submit">Убрать из заказа</button>
+  </form>
+  {% endfor %}
+  <p>Стоимость заказа: {{ order.get_displayed_price }} $</p>
+
+  <form action="{% url 'payment:create_stripe_session' pk=order.id %}" method="POST">
+    {% csrf_token %}
+    <button class="btn" type="submit">Оплатить</button>
+  </form>
+
+  {% else %}
+  <h2>Вы ещё ничего не выбрали</h2>
+  {% endif %}
+</div>
+<div class="card">
+  <p>Вы можете вернуться <a class="btn" href="{% url 'payment:items' %}">к списку товаров</a></p>
+</div>
+
+{% endblock %}
