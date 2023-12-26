@@ -20,7 +20,7 @@ services:
       - ../.env
     ports:
       - 8000:8000
-    command: bash -c 'python manage.py collectstatic --noinput && gunicorn -b 0.0.0.0:8000 django_project.wsgi:application'
+    command: sh -c 'python manage.py collectstatic --noinput && gunicorn -b 0.0.0.0:8000 django_project.wsgi:application'
     depends_on:
       db:
         condition: service_started
