@@ -11,9 +11,11 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from urllib.parse import urljoin
 
 from environs import Env
 import dj_database_url
+
 
 env = Env()
 env.read_env()
@@ -29,7 +31,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = env.str('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DEBUG')
+DEBUG = env.bool('DEBUG', True)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
 
@@ -143,8 +145,8 @@ AUTH_USER_MODEL = 'users.User'
 STRIPE_PUBLIC_KEY = env.str('STRIPE_PUBLIC_KEY')
 STRIPE_SECRET_KEY = env.str('STRIPE_SECRET_KEY')
 
-PAYMENT_SUCCESS_URL = 'http://127.0.0.1:8000/success/'
-PAYMENT_CANCEL_URL = 'http://127.0.0.1:8000/cancel/'
+PAYMENT_SUCCESS_URL = urljoin(env.str('YOUR_DOMAIN'), '/success/')
+PAYMENT_CANCEL_URL = urljoin(env.str('YOUR_DOMAIN'), '/cancel/')
 
 STRIPE_ENDPOINT_SECRET = env.str('STRIPE_ENDPOINT_SECRET')
 
