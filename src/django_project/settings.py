@@ -145,3 +145,24 @@ PAYMENT_SUCCESS_URL = 'http://127.0.0.1:8000/success/'
 PAYMENT_CANCEL_URL = 'http://127.0.0.1:8000/cancel/'
 
 STRIPE_ENDPOINT_SECRET = env.str('STRIPE_ENDPOINT_SECRET')
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    'loggers': {
+        'payment': {
+            'handlers': ['console'],
+            'level': "INFO",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
+}

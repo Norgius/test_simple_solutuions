@@ -1,4 +1,5 @@
 from typing import Any
+import logging
 
 import stripe
 from django.db.models.query import QuerySet
@@ -12,6 +13,8 @@ from django.utils import timezone
 from django.conf import settings
 
 from payment.models import Item, Order
+
+logger = logging.getLogger('payment')
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -132,18 +135,18 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse:
             payload, sig_header, endpoint_secret
         )
     except ValueError as e:
-        # Invalid payload
+        logger.warning(f'Invalid payload\n{e}')
         return HttpResponse(status=400)
-    except stripe.error.SignatureVerificationError as e:
-        # Invalid signature
+    except stripe.SignatureVerificationError as e:
+        logger.warning(f'Invalid signature\n{e}')
         return HttpResponse(status=400)
 
     # Handle the checkout.session.completed event
     if event['type'] == 'checkout.session.completed':
-        print("Payment was successful.")
         order = Order.objects.filter(status=Order.OrderStatus.IN_ASSEMBLY).first()
         order.status = Order.OrderStatus.PAID
         order.paid_at = timezone.now()
         order.save()
+        logger.info('Payment was successful')
 
     return HttpResponse(status=200)
