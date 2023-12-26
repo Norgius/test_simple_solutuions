@@ -31,7 +31,7 @@ SECRET_KEY = env.str('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
 
 
 # Application definition
@@ -143,3 +143,5 @@ STRIPE_SECRET_KEY = env.str('STRIPE_SECRET_KEY')
 
 PAYMENT_SUCCESS_URL = 'http://127.0.0.1:8000/success/'
 PAYMENT_CANCEL_URL = 'http://127.0.0.1:8000/cancel/'
+
+STRIPE_ENDPOINT_SECRET = env.str('STRIPE_ENDPOINT_SECRET')
