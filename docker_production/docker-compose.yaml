@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+
+  db:
+    container_name: db
+    image: postgres:14.8
+    env_file:
+      - ../.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  django:
+    container_name: django
+    build: ../.
+    volumes:
+      - ../static/:/src/static/
+    env_file:
+      - ../.env
+    ports:
+      - 8000:8000
+    command: bash -c 'python manage.py collectstatic --noinput && gunicorn -b 0.0.0.0:8000 django_project.wsgi:application'
+    depends_on:
+      db:
+        condition: service_started
+    restart: unless-stopped
+
+  nginx:
+    container_name: nginx
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    volumes:
+      - ../static:/src/static/
+    depends_on:
+      - django
+    ports:
+      - 80:80
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
