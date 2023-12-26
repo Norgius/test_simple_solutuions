@@ -14,4 +14,5 @@ urlpatterns = [
     path('buy/<pk>/', views.CreateStripeSession.as_view(), name='create_stripe_session'),
     path('success/', views.SuccessView.as_view(), name='success'),
     path('cancel/', views.CancelView.as_view(), name='cancel'),
+    path('webhook/', views.stripe_webhook),
 ]
