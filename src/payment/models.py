@@ -4,8 +4,11 @@ from django.db.models import Sum, F
 
 class Item(models.Model):
     name = models.CharField('Название', max_length=150)
-    description = models.TextField('Описание')
-    price = models.IntegerField('Цена')
+    description = models.TextField('Описание', blank=True)
+    price = models.PositiveIntegerField(
+        'Цена',
+        help_text='Цена: 100 = 1$',
+    )
 
     def __str__(self):
         return self.name
@@ -15,7 +18,9 @@ class Item(models.Model):
         verbose_name_plural = 'Товары'
 
     def get_displayed_price(self):
-        return f'{(self.price / 100):.2f}'
+        if self.price:
+            return f'{(self.price / 100):.2f}'
+        return 0
 
 
 class OrderQuerySet(models.QuerySet):
@@ -58,11 +63,15 @@ class Order(models.Model):
     objects = OrderQuerySet.as_manager()
 
     def __str__(self) -> str:
-        return f'{self.status} - {self.creation_time}'
+        if self.status == self.OrderStatus.PAID:
+            return f'{self.get_status_display()} - {self.paid_at}'
+        return f'{self.get_status_display()} - {self.creation_time}'
 
     class Meta:
         verbose_name = 'Заказ'
         verbose_name_plural = 'Заказы'
 
     def get_displayed_price(self):
-        return f'{(self.total_cost / 100):.2f}'
+        if self.total_cost:
+            return f'{(self.total_cost / 100):.2f}'
+        return 0
