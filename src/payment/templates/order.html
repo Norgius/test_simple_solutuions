@@ -5,9 +5,6 @@
 
   {% if order.items.all %}
   <h2>Ваш заказ</h2>
-  {% else %}
-  <h2>Вы ещё ничего не выбрали</h2>
-  {% endif %}
 
   <div class="order">
     <div>
@@ -44,6 +41,9 @@
     {% endif %}
   </div>
 
+  {% else %}
+  <h2>Вы ещё ничего не выбрали</h2>
+  {% endif %}
 </div>
 <div class="card">
   <p>Вы можете вернуться <a class="btn" href="{% url 'payment:items' %}">к списку товаров</a></p>
