@@ -5,24 +5,45 @@
 
   {% if order.items.all %}
   <h2>Ваш заказ</h2>
-  {% for item in order.items.all %}
-  <p>{{ item.name }} - {{ item.get_displayed_price }} $</p>
-
-  <form action="{% url 'payment:delete_item_from_order' item_id=item.id %}" method="post">
-    {% csrf_token %}
-    <button class="btn" type="submit">Убрать из заказа</button>
-  </form>
-  {% endfor %}
-  <p>Стоимость заказа: {{ order.get_displayed_price }} $</p>
-
-  <form action="{% url 'payment:create_stripe_session' pk=order.id %}" method="POST">
-    {% csrf_token %}
-    <button class="btn" type="submit">Оплатить</button>
-  </form>
-
   {% else %}
   <h2>Вы ещё ничего не выбрали</h2>
   {% endif %}
+
+  <div class="order">
+    <div>
+      {% for item in order.items.all %}
+      <p>{{ item.name }} - {{ item.get_displayed_price }} $</p>
+
+      <form action="{% url 'payment:delete_item_from_order' item_id=item.id %}" method="post">
+        {% csrf_token %}
+        <button class="btn" type="submit">Убрать из заказа</button>
+      </form>
+      {% endfor %}
+      {% if order.discount %}
+      <p>У вас применен купон <b>{{ order.discount.code }}</b> со скидкой <b>{{ order.discount.percent_off }}%</b></p>
+      {% endif %}
+      <p>Стоимость заказа: {{ order.get_displayed_price }} $</p>
+
+      <form action="{% url 'payment:create_stripe_session' pk=order.id %}" method="POST">
+        {% csrf_token %}
+        <button class="btn" type="submit">Оплатить</button>
+      </form>
+    </div>
+    {% if not order.discount %}
+    <div>
+      {% if discount == 'not_active' %}
+      <p>Данный купон неактивен</p>
+      {% endif %}
+      <form action="{% url 'discount:check' %}" method="post">
+        {% csrf_token %}
+        {{ discount_form }}
+        <br>
+        <input class="btn" type="submit" value="Применить">
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
 </div>
 <div class="card">
   <p>Вы можете вернуться <a class="btn" href="{% url 'payment:items' %}">к списку товаров</a></p>

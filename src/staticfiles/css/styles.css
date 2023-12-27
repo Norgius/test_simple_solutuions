@@ -36,9 +36,10 @@ body {
   margin-top: 5px;
 }
 
-.info-item {
+.order {
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
 }
 
 .btn {
