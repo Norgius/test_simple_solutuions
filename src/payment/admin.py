@@ -33,7 +33,7 @@ class ItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderItem(admin.ModelAdmin):
-    fields = ['status', 'creation_time', 'paid_at']
+    fields = ['status', 'creation_time', 'paid_at', 'discount']
     readonly_fields = ['creation_time', 'get_total_cost']
     list_display = ('__str__', 'get_total_cost')
     inlines = [ItemInline]
@@ -49,7 +49,7 @@ class OrderItem(admin.ModelAdmin):
 
     def get_readonly_fields(self, request: HttpRequest, obj: Any | None = ...) -> list[str] | tuple[Any, ...]:
         if obj and obj.status == Order.OrderStatus.PAID:
-            return self.readonly_fields + ['paid_at']
+            return self.readonly_fields + ['paid_at', 'discount']
         return self.readonly_fields
 
     def get_total_cost(self, obj: Order) -> str:
