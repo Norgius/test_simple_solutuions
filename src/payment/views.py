@@ -13,6 +13,8 @@ from django.utils import timezone
 from django.conf import settings
 
 from payment.models import Item, Order
+from discount.forms import DiscountForm
+from discount.models import Discount
 
 logger = logging.getLogger('payment')
 
@@ -21,8 +23,18 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class CreateStripeSession(View):
     def post(self, request: HttpRequest, pk: int) -> HttpResponseRedirect:
-        order = Order.objects.prefetch_related('items').get(id=pk)
-        line_items = []
+        order = Order.objects.select_related('discount').prefetch_related('items').get(id=pk)
+        line_items, coupon = [], {}
+
+        if order.discount:
+            try:
+                coupon_data = stripe.Coupon.retrieve(order.discount.code)
+                logger.warning(coupon_data)
+                coupon = {'coupon': order.discount.code} if coupon_data.get('valid') else {}
+            except stripe.InvalidRequestError:
+                logger.info(f'''Купон {order.discount.code} не найдет на Stripe или же перестал быть активным,
+                            пожалуйста проверьте его наличие на сайте.'''
+                            )
         for item in order.items.all():
             line_items.append(
                 {
@@ -43,8 +55,10 @@ class CreateStripeSession(View):
                 mode='payment',
                 success_url=settings.PAYMENT_SUCCESS_URL,
                 cancel_url=settings.PAYMENT_CANCEL_URL,
+                discounts=[coupon],
             )
-        except Exception:
+        except Exception as e:
+            logger.warning(e.args)
             return redirect('payment:cancel')
         return redirect(checkout_session.url)
 
@@ -60,15 +74,24 @@ class ShowItem(DetailView):
         return context
 
 
-class ShowOrder(ListView):
-    template_name = 'order.html'
-    context_object_name = 'order'
-    extra_context = {
-        'title': 'Ваш заказ',
-    }
+class ShowOrder(View):
 
-    def get_queryset(self) -> QuerySet[Any]:
-        return Order.objects.calculate_total_cost().receive_assembled_order()
+    def get(self, request: HttpRequest, pk: int):
+        order: Order = Order.objects.calculate_total_cost().get(id=pk)
+        context = {'order': order, 'discount_form': DiscountForm(), 'title': 'Ваш заказ'}
+        discount_id = request.session.get('discount_id')
+
+        if isinstance(discount_id, int):
+            context['discount'] = 'active'
+            request.session['discount_id'] = None
+            discount = Discount.objects.get(id=discount_id)
+            order.discount = discount
+            order.save()
+        elif discount_id == 'not_active':
+            context['discount'] = discount_id
+            request.session['discount_id'] = None
+
+        return render(request, 'order.html', context)
 
 
 class AddItemToOrder(View):
@@ -82,7 +105,8 @@ class AddItemToOrder(View):
             return render(
                 request,
                 'item_details.html',
-                context={'pk': item.id, 'item': item, 'order_id': order.id})
+                context={'pk': item.id, 'item': item, 'order_id': order.id},
+            )
         else:
             order = Order.objects.create()
             order.items.set([item])
@@ -135,10 +159,10 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse:
             payload, sig_header, endpoint_secret
         )
     except ValueError as e:
-        logger.warning(f'Invalid payload\n{e}')
+        logger.warning(f'Invalid payload\n{e.args}')
         return HttpResponse(status=400)
     except stripe.SignatureVerificationError as e:
-        logger.warning(f'Invalid signature\n{e}')
+        logger.warning(f'Invalid signature\n{e.args}')
         return HttpResponse(status=400)
 
     # Handle the checkout.session.completed event
