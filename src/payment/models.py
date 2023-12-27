@@ -1,6 +1,8 @@
 from django.db import models
 from django.db.models import Sum, F
 
+from discount.models import Discount
+
 
 class Item(models.Model):
     name = models.CharField('Название', max_length=150)
@@ -28,7 +30,7 @@ class OrderQuerySet(models.QuerySet):
         return self.prefetch_related('items').filter(status=Order.OrderStatus.IN_ASSEMBLY).first()
 
     def calculate_total_cost(self):
-        return self.prefetch_related('items').annotate(total_cost=Sum(F('items__price')))
+        return self.select_related('discount').prefetch_related('items').annotate(total_cost=Sum(F('items__price')))
 
 
 class Order(models.Model):
@@ -59,6 +61,14 @@ class Order(models.Model):
         verbose_name='Товары',
         related_name='orders',
     )
+    discount = models.ForeignKey(
+        Discount,
+        verbose_name='Скидка',
+        related_name='orders',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
 
     objects = OrderQuerySet.as_manager()
 
@@ -73,5 +83,8 @@ class Order(models.Model):
 
     def get_displayed_price(self):
         if self.total_cost:
+            if self.discount:
+                discount = self.total_cost * (self.discount.percent_off / 100)
+                return f'{((self.total_cost - discount) / 100):.2f}'
             return f'{(self.total_cost / 100):.2f}'
         return 0
